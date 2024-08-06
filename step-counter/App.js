@@ -92,6 +92,11 @@ export default function App() {
           />
         )}
       </View>
+      <TouchableOpacity style={styles.button} onPress={resetSteps}>
+        <Text style={styles.buttonText}>
+          Reset
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -156,5 +161,16 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     backgroundColor: 'transparent'
+  },
+  button:{
+    backgroundColor:'#3498db',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20
+  }, 
+  buttonText:{
+    color: '#fff',
+    fontSize: 18,
+    textAlign: 'center'
   }
 });
