@@ -2,9 +2,9 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import LoginScreen from './assets/LoginScreen';
-import RegisterScreen from './assets/RegisterScreen';
-import StepTrackerScreen from './assets/StepTrackerScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
+import StepTrackerScreen from './src/screens/StepTrackerScreen';
 
 const Stack = createStackNavigator();
 
