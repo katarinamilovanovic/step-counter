@@ -8,8 +8,7 @@ node_modules/
 dist/
 web-build/
 
-.firebase-backend
-step-counter-10f91-firebase-adminsdk-gs7ar-f5b2b84508
+firebase-backend/step-counter-10f91-firebase-adminsdk-gs7ar-f5b2b84508.json
 
 # Native
 *.orig.*
