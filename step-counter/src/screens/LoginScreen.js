@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import StepTrackerScreen from './StepTrackerScreen';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-    const apiKey = "AIzaSyDZFoJXMGSd_m4X7OSxpQIF-44lAICgkGs"; // Replace with your Firebase Web API Key
+    const apiKey = "AIzaSyDZFoJXMGSd_m4X7OSxpQIF-44lAICgkGs"; 
     const loginUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
 
     try {
@@ -20,8 +22,10 @@ const LoginScreen = ({ navigation }) => {
 
       const { idToken, localId, email: userEmail } = response.data; // Extract data from response
 
-      // Optionally, store idToken in localStorage or AsyncStorage for further use
-      console.log('ID Token:', idToken);
+     // Store idToken and userId in AsyncStorage
+     await AsyncStorage.setItem('idToken', idToken);
+     await AsyncStorage.setItem('userId', localId);
+     console.log(idToken, localId);
 
       Alert.alert('Success', 'You are now logged in!');
       navigation.navigate('StepTracker');

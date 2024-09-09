@@ -1,19 +1,68 @@
 // assets/StepTrackerScreen.js
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, TextInput, Alert, Button } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
-//import LottieView from 'lottie-react-native';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { format } from 'date-fns';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import LoginScreen from './LoginScreen';
+
 
 const CALORIES_PER_STEP = 0.05;
 
-export default function StepTrackerScreen() {
+export default function StepTrackerScreen({ navigation }) {
   const [steps, setSteps] = useState(0);
   const [isCounting, setIsCounting] = useState(false);
   const [lastY, setLastY] = useState(0);
   const [lastTimestamp, setLastTimestamp] = useState(0);
+  const [stressLevel, setStressLevel] = useState('');
+  const [waterIntake, setWaterIntake] = useState('');
+  const [exercise, setExercise] = useState('');
+  const [generalFeel, setGeneralFeel] = useState('');
+  const [user, setUser] = useState(null); 
+  const auth = getAuth();
 
   const animationRefRunning = useRef(null);
   const animationRefSitting = useRef(null);
+
+
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        const idToken = await AsyncStorage.getItem('idToken');
+        const userId = await AsyncStorage.getItem('userId');
+
+        if (idToken && userId) {
+          // Verify the token and get user info if needed
+          const user = { uid: userId, idToken }; // 
+          setUser(user);
+        } else {
+
+          console.log('User not logged in');
+          navigation.navigate('Login');
+        }
+      } catch (error) {
+        console.error('Error retrieving user data:', error);
+      }
+    };
+
+    getUserData();
+
+    // Listener for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        //console.log(idToken, localId);
+        console.log('User not logged in');
+        navigation.navigate('Login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth, navigation]);
+
 
   useEffect(() => {
     let subscription;
@@ -56,6 +105,38 @@ export default function StepTrackerScreen() {
 
   const estimatedCaloriesBurned = steps * CALORIES_PER_STEP;
 
+  //salje step data firebase-u
+  const handleSubmitData = async () => {
+    const auth = getAuth();
+    //console.log(auth.currentUser);
+
+    try {
+      console.log('Sending data...');
+      Alert.alert('Debug', 'Submit button pressed!');
+
+      // Create health data payload with current date
+      const healthData = {
+        uid: user.uid,
+        date: new Date(), 
+        steps: steps,
+        stressLevel: stressLevel,
+        waterIntake: waterIntake,
+        exercise: exercise,
+        generalFeel: generalFeel
+      };
+
+
+
+      // Send health data to the backend
+      const response = await axios.post('http://localhost:5000/api/updateHealthData', healthData);
+
+      Alert.alert('Success', 'Health data updated successfully!');
+    } catch (error) {
+      console.error('Error updating health data:', error);
+      Alert.alert('Error', 'Failed to update health data');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Step Tracker</Text>
@@ -71,10 +152,42 @@ export default function StepTrackerScreen() {
           </Text>
         </View>
       </View>
-      
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Stress Level"
+          value={stressLevel}
+          onChangeText={setStressLevel}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Water Intake (L)"
+          value={waterIntake}
+          onChangeText={setWaterIntake}
+          keyboardType="numeric"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Exercise (min)"
+          value={exercise}
+          onChangeText={setExercise}
+          keyboardType="numeric"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="General Feel (awful, bad, ok, good, great, amazing)"
+          value={generalFeel}
+          onChangeText={setGeneralFeel}
+        />
+      </View>
+
       <TouchableOpacity style={styles.button} onPress={resetSteps}>
         <Text style={styles.buttonText}>Reset</Text>
       </TouchableOpacity>
+      <Button style={styles.button} onPress={handleSubmitData}>
+        <Text style={styles.buttonText}>Save Health Data</Text>
+      </Button>
     </SafeAreaView>
   );
 }
@@ -126,6 +239,29 @@ const styles = StyleSheet.create({
     color: '#e74c3c',
     fontWeight: 'bold',
   },
+  inputContainer: {
+    width: '80%',
+    marginBottom: 20,
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  button: {
+    backgroundColor: '#3498db',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    textAlign: 'center',
+  },
   animationContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -139,6 +275,14 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     backgroundColor: 'transparent',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 20,
   },
   button: {
     backgroundColor: '#3498db',
