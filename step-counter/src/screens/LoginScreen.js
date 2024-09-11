@@ -9,27 +9,30 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-    const apiKey = "AIzaSyDZFoJXMGSd_m4X7OSxpQIF-44lAICgkGs"; 
+    const apiKey = "AIzaSyDZFoJXMGSd_m4X7OSxpQIF-44lAICgkGs";
     const loginUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
 
     try {
-      // Send HTTP request to Firebase Authentication REST API for login
       const response = await axios.post(loginUrl, {
         email,
         password,
-        returnSecureToken: true, // Ensures token is returned on successful login
+        returnSecureToken: true,
       });
 
-      const { idToken, localId, email: userEmail } = response.data; // Extract data from response
+      const { idToken, localId, email: userEmail } = response.data;
 
-     // Store idToken and userId in AsyncStorage
-     await AsyncStorage.setItem('idToken', idToken);
-     await AsyncStorage.setItem('userId', localId);
-     console.log(idToken, localId);
+      //console.log("Login successful. idToken:", idToken, "localId:", localId);
+
+      // Store idToken and localId in AsyncStorage
+      await AsyncStorage.setItem('idToken', idToken);
+      await AsyncStorage.setItem('userId', localId);
 
       Alert.alert('Success', 'You are now logged in!');
+
+      // Navigate to StepTracker only after AsyncStorage is set
       navigation.navigate('StepTracker');
     } catch (error) {
+      console.error('Login error:', error.response?.data?.error?.message || error.message);
       Alert.alert('Error', error.response?.data?.error?.message || error.message);
     }
   };
@@ -53,6 +56,7 @@ const LoginScreen = ({ navigation }) => {
         secureTextEntry
       />
       <Button title="Login" onPress={handleLogin} />
+      <br></br>
       <Button
         title="Don't have an account? Register"
         onPress={() => navigation.navigate('Register')}

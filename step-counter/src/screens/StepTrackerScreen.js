@@ -1,12 +1,11 @@
 // assets/StepTrackerScreen.js
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, TextInput, Alert, Button } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, SafeAreaView, TextInput, Alert, Button, ActivityIndicator, Picker } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { format } from 'date-fns';
+import { auth } from './../../firebaseConfig'
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
-import LoginScreen from './LoginScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const CALORIES_PER_STEP = 0.05;
@@ -20,12 +19,12 @@ export default function StepTrackerScreen({ navigation }) {
   const [waterIntake, setWaterIntake] = useState('');
   const [exercise, setExercise] = useState('');
   const [generalFeel, setGeneralFeel] = useState('');
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
+
   const auth = getAuth();
 
   const animationRefRunning = useRef(null);
   const animationRefSitting = useRef(null);
-
 
   useEffect(() => {
     const getUserData = async () => {
@@ -34,8 +33,7 @@ export default function StepTrackerScreen({ navigation }) {
         const userId = await AsyncStorage.getItem('userId');
 
         if (idToken && userId) {
-          // Verify the token and get user info if needed
-          const user = { uid: userId, idToken }; // 
+          const user = { uid: userId, idToken };
           setUser(user);
         } else {
 
@@ -49,19 +47,8 @@ export default function StepTrackerScreen({ navigation }) {
 
     getUserData();
 
-    // Listener for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        //console.log(idToken, localId);
-        console.log('User not logged in');
-        navigation.navigate('Login');
-      }
-    });
-
-    return () => unsubscribe();
   }, [auth, navigation]);
+
 
 
   useEffect(() => {
@@ -107,17 +94,12 @@ export default function StepTrackerScreen({ navigation }) {
 
   //salje step data firebase-u
   const handleSubmitData = async () => {
-    const auth = getAuth();
-    //console.log(auth.currentUser);
 
     try {
-      console.log('Sending data...');
-      Alert.alert('Debug', 'Submit button pressed!');
 
-      // Create health data payload with current date
       const healthData = {
         uid: user.uid,
-        date: new Date(), 
+        date: new Date(),
         steps: steps,
         stressLevel: stressLevel,
         waterIntake: waterIntake,
@@ -125,9 +107,6 @@ export default function StepTrackerScreen({ navigation }) {
         generalFeel: generalFeel
       };
 
-
-
-      // Send health data to the backend
       const response = await axios.post('http://localhost:5000/api/updateHealthData', healthData);
 
       Alert.alert('Success', 'Health data updated successfully!');
@@ -137,8 +116,9 @@ export default function StepTrackerScreen({ navigation }) {
     }
   };
 
-  return (
+return (
     <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Text style={styles.title}>Step Tracker</Text>
       <View style={styles.infoContainer}>
         <View style={styles.stepsContainer}>
@@ -154,12 +134,19 @@ export default function StepTrackerScreen({ navigation }) {
       </View>
 
       <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Stress Level"
-          value={stressLevel}
-          onChangeText={setStressLevel}
-        />
+        <Text style={styles.label}>Stress Level</Text>
+        <Picker
+          selectedValue={stressLevel}
+          style={styles.picker}
+          onValueChange={(itemValue) => setStressLevel(itemValue)}
+        >
+          <Picker.Item label="Select stress level" value="" />
+          <Picker.Item label="Low" value="Low" />
+          <Picker.Item label="Moderate" value="Moderate" />
+          <Picker.Item label="High" value="High" />
+        </Picker>
+
+        <Text style={styles.label}>Water Intake (L)</Text>
         <TextInput
           style={styles.input}
           placeholder="Water Intake (L)"
@@ -167,6 +154,8 @@ export default function StepTrackerScreen({ navigation }) {
           onChangeText={setWaterIntake}
           keyboardType="numeric"
         />
+
+        <Text style={styles.label}>Exercise (min)</Text>
         <TextInput
           style={styles.input}
           placeholder="Exercise (min)"
@@ -174,21 +163,30 @@ export default function StepTrackerScreen({ navigation }) {
           onChangeText={setExercise}
           keyboardType="numeric"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="General Feel (awful, bad, ok, good, great, amazing)"
-          value={generalFeel}
-          onChangeText={setGeneralFeel}
-        />
+
+        <Text style={styles.label}>General Feel</Text>
+        <Picker
+          selectedValue={generalFeel}
+          style={styles.picker}
+          onValueChange={(itemValue) => setGeneralFeel(itemValue)}
+        >
+          <Picker.Item label="Select general feel" value="" />
+          <Picker.Item label="Awful" value="Awful" />
+          <Picker.Item label="Bad" value="Bad" />
+          <Picker.Item label="Ok" value="Ok" />
+          <Picker.Item label="Good" value="Good" />
+          <Picker.Item label="Great" value="Great" />
+          <Picker.Item label="Amazing" value="Amazing" />
+        </Picker>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={resetSteps}>
-        <Text style={styles.buttonText}>Reset</Text>
-      </TouchableOpacity>
-      <Button style={styles.button} onPress={handleSubmitData}>
-        <Text style={styles.buttonText}>Save Health Data</Text>
-      </Button>
-    </SafeAreaView>
+      <Button style={styles.button} onPress={resetSteps} title='Reset' />
+      <br></br>
+      <Button style={styles.button} onPress={handleSubmitData} title='Save Health Data' />
+      <br></br>
+      <Button style={styles.button} onPress={() => navigation.navigate('HealthHistory')} title='View Health History' />
+      </ScrollView>
+   </SafeAreaView>
   );
 }
 
@@ -254,7 +252,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#3498db',
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 20,
     marginTop: 20,
   },
   buttonText: {
@@ -283,16 +281,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
   },
 });
