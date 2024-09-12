@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
-import StepTrackerScreen from './StepTrackerScreen';
+
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');

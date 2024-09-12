@@ -1,12 +1,10 @@
-// assets/StepTrackerScreen.js
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, ScrollView, SafeAreaView, TextInput, Alert, Button, ActivityIndicator, Picker } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { auth } from './../../firebaseConfig'
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { auth } from './../../firebaseConfig'
 
 const CALORIES_PER_STEP = 0.05;
 
@@ -20,6 +18,7 @@ export default function StepTrackerScreen({ navigation }) {
   const [exercise, setExercise] = useState('');
   const [generalFeel, setGeneralFeel] = useState('');
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const auth = getAuth();
 
@@ -116,77 +115,104 @@ export default function StepTrackerScreen({ navigation }) {
     }
   };
 
-return (
+  /*const logoutUser = async () => {
+    try {
+      setLoading(true);
+
+      // Optional: Send logout request to the backend
+      const response = await axios.post('http://localhost:5000/api/logout');
+
+      // Clear user info from AsyncStorage
+      await AsyncStorage.removeItem('idToken');
+      await AsyncStorage.removeItem('userId');
+
+      // Sign out from Firebase
+      await signOut(auth);
+
+      Alert.alert('Success', 'Logged out successfully!');
+      navigation.navigate('Login'); // Navigate back to login screen
+    } catch (error) {
+      console.error('Error during logout:', error);
+      Alert.alert('Error', 'Failed to log out.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+*/
+
+  return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <Text style={styles.title}>Step Tracker</Text>
-      <View style={styles.infoContainer}>
-        <View style={styles.stepsContainer}>
-          <Text style={styles.stepsText}>{steps}</Text>
-          <Text style={styles.stepsLabel}>Steps</Text>
+        <View style={styles.infoContainer}>
+          <View style={styles.stepsContainer}>
+            <Text style={styles.stepsText}>{steps}</Text>
+            <Text style={styles.stepsLabel}>Steps</Text>
+          </View>
+          <View style={styles.caloriesContainer}>
+            <Text style={styles.caloriesLabel}>Estimated Calories Burned:</Text>
+            <Text style={styles.caloriesText}>
+              {estimatedCaloriesBurned.toFixed(2)} calories
+            </Text>
+          </View>
         </View>
-        <View style={styles.caloriesContainer}>
-          <Text style={styles.caloriesLabel}>Estimated Calories Burned:</Text>
-          <Text style={styles.caloriesText}>
-            {estimatedCaloriesBurned.toFixed(2)} calories
-          </Text>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Stress Level</Text>
+          <Picker
+            selectedValue={stressLevel}
+            style={styles.picker}
+            onValueChange={(itemValue) => setStressLevel(itemValue)}
+          >
+            <Picker.Item label="Select stress level" value="" />
+            <Picker.Item label="Low" value="Low" />
+            <Picker.Item label="Moderate" value="Moderate" />
+            <Picker.Item label="High" value="High" />
+          </Picker>
+
+          <Text style={styles.label}>Water Intake (L)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Water Intake (L)"
+            value={waterIntake}
+            onChangeText={setWaterIntake}
+            keyboardType="numeric"
+          />
+
+          <Text style={styles.label}>Exercise (min)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Exercise (min)"
+            value={exercise}
+            onChangeText={setExercise}
+            keyboardType="numeric"
+          />
+
+          <Text style={styles.label}>General Feel</Text>
+          <Picker
+            selectedValue={generalFeel}
+            style={styles.picker}
+            onValueChange={(itemValue) => setGeneralFeel(itemValue)}
+          >
+            <Picker.Item label="Select general feel" value="" />
+            <Picker.Item label="Awful" value="Awful" />
+            <Picker.Item label="Bad" value="Bad" />
+            <Picker.Item label="Ok" value="Ok" />
+            <Picker.Item label="Good" value="Good" />
+            <Picker.Item label="Great" value="Great" />
+            <Picker.Item label="Amazing" value="Amazing" />
+          </Picker>
         </View>
-      </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Stress Level</Text>
-        <Picker
-          selectedValue={stressLevel}
-          style={styles.picker}
-          onValueChange={(itemValue) => setStressLevel(itemValue)}
-        >
-          <Picker.Item label="Select stress level" value="" />
-          <Picker.Item label="Low" value="Low" />
-          <Picker.Item label="Moderate" value="Moderate" />
-          <Picker.Item label="High" value="High" />
-        </Picker>
+        <Button style={styles.button} onPress={resetSteps} title='Reset' />
+        <br></br>
+        <Button style={styles.button} onPress={handleSubmitData} title='Save Health Data' />
+        <br></br>
+        <Button style={styles.button} onPress={() => navigation.navigate('HealthHistory')} title='View Health History' />
+        <br></br>
 
-        <Text style={styles.label}>Water Intake (L)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Water Intake (L)"
-          value={waterIntake}
-          onChangeText={setWaterIntake}
-          keyboardType="numeric"
-        />
-
-        <Text style={styles.label}>Exercise (min)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Exercise (min)"
-          value={exercise}
-          onChangeText={setExercise}
-          keyboardType="numeric"
-        />
-
-        <Text style={styles.label}>General Feel</Text>
-        <Picker
-          selectedValue={generalFeel}
-          style={styles.picker}
-          onValueChange={(itemValue) => setGeneralFeel(itemValue)}
-        >
-          <Picker.Item label="Select general feel" value="" />
-          <Picker.Item label="Awful" value="Awful" />
-          <Picker.Item label="Bad" value="Bad" />
-          <Picker.Item label="Ok" value="Ok" />
-          <Picker.Item label="Good" value="Good" />
-          <Picker.Item label="Great" value="Great" />
-          <Picker.Item label="Amazing" value="Amazing" />
-        </Picker>
-      </View>
-
-      <Button style={styles.button} onPress={resetSteps} title='Reset' />
-      <br></br>
-      <Button style={styles.button} onPress={handleSubmitData} title='Save Health Data' />
-      <br></br>
-      <Button style={styles.button} onPress={() => navigation.navigate('HealthHistory')} title='View Health History' />
       </ScrollView>
-   </SafeAreaView>
+    </SafeAreaView>
   );
 }
 

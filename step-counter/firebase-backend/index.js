@@ -79,6 +79,55 @@ app.get('/getHealthData/:uid', async (req, res) => {
   }
 });
 
+
+/*app.post('/api/logout', async (req, res) => {
+  try {
+    // If you have any server-side logic to handle logout (e.g., invalidating tokens, sessions, etc.), add it here
+
+    // For Firebase, you typically don't need to do much on the backend for logout
+    console.log("User logged out on the client-side");
+
+    // Send a success response
+    res.status(200).send({ message: 'User logged out successfully' });
+  } catch (error) {
+    console.error('Error logging out user:', error);
+    res.status(500).send({ error: 'Failed to log out user' });
+  }
+});
+
+*/
+
+// API endpoint to get steps data for today's date
+app.get('/api/steps/today', async (req, res) => {
+  try {
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString();
+    console.log(today);
+    const healthDataRef = db.collection('healthData');
+
+    // Query the 'steps' collection for all documents with today's date
+    //const healthDataSnapshot = await db.collection('healthData').where('date', '==', today).get();
+    const healthDataSnapshot = await healthDataRef.where('date', '==', today).get();
+    // If no data is found
+    if (healthDataSnapshot.empty) {
+      return res.status(404).json({ message: 'No step data found for today' });
+    }
+
+    // Collect all steps data
+    const stepsData = [];
+    healthDataSnapshot.forEach((doc) => {
+      const data = doc.data();
+      stepsData.push({ id: doc.id, steps: data.steps }); // Extract only 'steps' field
+    });
+
+    // Send response
+    res.status(200).json(stepsData);
+  } catch (error) {
+    console.error('Error fetching step data:', error);
+    res.status(500).json({ error: 'Failed to fetch step data' });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

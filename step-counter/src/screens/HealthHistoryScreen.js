@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Alert, Picker, ActivityIndicator } from 'react-native';
+import { View, Text, Button, Alert, Picker, ActivityIndicator, ScrollView } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from 'firebase/auth';
@@ -27,11 +27,11 @@ const HealthHistoryScreen = () => {
         setLoading(true);
         const user = { uid: userId, idToken };
         setUser(user);
-        console.log('User authenticated, userId:', userId);
+        //console.log('User authenticated, userId:', userId);
 
         try {
           const response = await axios.get(`http://localhost:5000/getHealthData/${userId}`);
-          console.log('API Response:', response.data);
+          //console.log('API Response:', response.data);
           setHealthData(response.data); // Save the fetched health data to state
         }
         catch (error) {
@@ -60,7 +60,7 @@ const HealthHistoryScreen = () => {
       case 'week':
         filteredData = healthData.filter((data) => {
           const dataDate = new Date(data.date);
-          console.log(Math.abs(differenceInDays(dataDate, currentDate)))
+          //console.log(Math.abs(differenceInDays(dataDate, currentDate)))
           return (Math.abs(differenceInDays(dataDate, currentDate))) <= 7; // Check if within last 7 days
         });
         break;
@@ -88,50 +88,52 @@ const HealthHistoryScreen = () => {
 
   return (
     <View style={{ padding: 20 }}>
-
-      <Button title="Show All Health Data" onPress={fetchHealthData} />
-
-      <View>
-        {healthData.map((data, index) => (
-          <View key={index} style={{ marginVertical: 10 }}>
-            <Text>Date: {data.date}</Text>
-            <Text>Steps: {data.steps}</Text>
-            <Text>Stress Level: {data.stressLevel}</Text>
-            <Text>Water Intake: {data.waterIntake}</Text>
-            <Text>Exercise: {data.exercise}</Text>
-            <Text>General Feel: {data.generalFeel}</Text>
-          </View>
-        ))}
-      </View>
-      <br></br>
-
-      <Text>Select Period:</Text>
-      <Picker selectedValue={filter} onValueChange={(itemValue) => setFilter(itemValue)}>
-        <Picker.Item label="Weekly" value="week" />
-        <Picker.Item label="Monthly" value="month" />
-        <Picker.Item label="Yearly" value="year" />
-      </Picker>
-
-      <Button title="Show Health Data" onPress={filterHealthData} />
-
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+      <ScrollView >
+        <Button title="Show All Health Data" onPress={fetchHealthData} />
+        <ScrollView>
+          {healthData.map((data, index) => (
+            <View key={index} style={{ marginVertical: 10 }}>
+              <Text>Date: {data.date}</Text>
+              <Text>Steps: {data.steps}</Text>
+              <Text>Stress Level: {data.stressLevel}</Text>
+              <Text>Water Intake: {data.waterIntake}</Text>
+              <Text>Exercise: {data.exercise}</Text>
+              <Text>General Feel: {data.generalFeel}</Text>
+            </View>
+          ))}
+        </ScrollView>
 
 
-      <View>
-        {filteredData.map((data, index) => (
-          <View key={index} style={{ marginVertical: 10 }}>
-            <Text>Date: {data.date}</Text>
-            <Text>Steps: {data.steps}</Text>
-            <Text>Stress Level: {data.stressLevel}</Text>
-            <Text>Water Intake: {data.waterIntake}</Text>
-            <Text>Exercise: {data.exercise}</Text>
-            <Text>General Feel: {data.generalFeel}</Text>
-          </View>
-        ))}
-      </View>
+        <Text>Select Period:</Text>
+        <Picker selectedValue={filter} onValueChange={(itemValue) => setFilter(itemValue)}>
+          <Picker.Item label="Weekly" value="week" />
+          <Picker.Item label="Monthly" value="month" />
+          <Picker.Item label="Yearly" value="year" />
+        </Picker>
 
+        <Button title="Show Health Data" onPress={filterHealthData} />
+
+        {loading && <ActivityIndicator size="large" color="#0000ff" />}
+
+
+        <View>
+            {filteredData.map((data, index) => (
+              <View key={index} style={{ marginVertical: 10 }}>
+                <Text>Date: {data.date}</Text>
+                <Text>Steps: {data.steps}</Text>
+                <Text>Stress Level: {data.stressLevel}</Text>
+                <Text>Water Intake: {data.waterIntake}</Text>
+                <Text>Exercise: {data.exercise}</Text>
+                <Text>General Feel: {data.generalFeel}</Text>
+              </View>
+            ))}
+        </View>
+      </ScrollView>
     </View>
   );
+
+
 };
+
 
 export default HealthHistoryScreen;

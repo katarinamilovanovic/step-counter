@@ -6,6 +6,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import StepTrackerScreen from './src/screens/StepTrackerScreen';
 import HealthHistoryScreen from './src/screens/HealthHistoryScreen';
+import Leaderboard from './src/screens/Leaderboard';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +18,7 @@ export default function App() {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="StepTracker" component={StepTrackerScreen} />
         <Stack.Screen name="HealthHistory" component={HealthHistoryScreen} />
+        <Stack.Screen name="Leaderboard" component={Leaderboard} />
       </Stack.Navigator>
     </NavigationContainer>
   );
